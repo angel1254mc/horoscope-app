@@ -47,7 +47,7 @@ def get_video_url(el):
 def get_random_videos():
     # Replace <YOUR_API_KEY> with your actual API key
     pexels_api_url = "https://api.pexels.com/videos/popular"
-    querystring = {"min_width":"1000","min_height":"1600", "min_duration": 20, "max_duration": 30, "per_page": 3}
+    querystring = {"min_width":"1000","min_height":"1800", "min_duration": 20, "max_duration": 30, "per_page": 3}
     headers = {
         "Authorization": os.getenv("PEXELS_API_KEY")
     }
