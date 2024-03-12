@@ -1,8 +1,10 @@
+import ollama
 import os
 import io
 import time
 import requests
 import random
+from tqdm import tqdm
 from dotenv import load_dotenv
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, AudioFileClip, CompositeAudioClip
 from moviepy.video.fx.all import crop, colorx
@@ -19,7 +21,7 @@ def download_videos(urls):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             # Open the file in binary write mode and write the content
-            with open(f'video-downloaded{i}.mp4', 'wb') as f:
+            with open(f'../videos/video-downloaded{i}.mp4', 'wb') as f:
                 f.write(response.content)
             print(f'Video downloaded successfully as video-downloaded{i}.mp4')
         else:
@@ -27,15 +29,9 @@ def download_videos(urls):
         i = i + 1
 
 def get_daily_horoscope(zodiac_sign):
-    url = "https://horoscope-astrology.p.rapidapi.com/horoscope"
-    querystring = {"day":"today","sunsign":zodiac_sign.lower()}
-    headers = {
-    	"X-RapidAPI-Key": os.getenv('HOROSCOPE_API_KEY'),
-    	"X-RapidAPI-Host": "horoscope-astrology.p.rapidapi.com"
-    }
-    response = requests.get(url, headers=headers, params=querystring)
-    data = response.json()
-    return data['horoscope']
+    response = ollama.generate(model='mistral', prompt=f"Generate a creative daily horoscope for {zodiac_sign}s. Imagine yourself as an expert in astrology, deeply attuned to the cosmic energies that influence our lives. Craft a personalized horoscope that offers insightful guidance and inspiration for {zodiac_sign} based on today's celestial alignments. Ensure each horoscope is unique and tailored to the individual characteristics and current planetary positions. Your goal is to provide a fresh and engaging perspective with each reading, avoiding repetition and clichés. Please keep it to 4 sentences at most and respond only with the daily horoscope message. You do not need to specify it as 'daily horoscope', just return the message and nothing else")
+    print(response)
+    return response['response']
 
 def get_video_url(el):
     return el['video_files'][0]['link']
@@ -90,7 +86,7 @@ def get_text_width(word_arr, fontsize):
 def transcribe_audio(audio_filename):
     print("Transcribing Audio...")
     audio = whisper.load_audio(audio_filename)
-    model = whisper.load_model("tiny", device="cpu")
+    model = whisper.load_model("large", device="cpu")
     result = whisper.transcribe(model, audio, language="en")
     return result["segments"]
 
@@ -234,12 +230,12 @@ def generate_video():
     print(horoscope)
     audio_filename = get_narrator_audio(horoscope)
     # Array of textclip
-    [text_clips, durations] = get_transcribed_text_v2(audio_filename=audio_filename, original_script=horoscope, start_delay=audio_start_delay, end_delay=audio_end_delay)
+    [text_clips, durations] = get_transcribed_text_v2(audio_filename=audio_filename, start_delay=audio_start_delay, end_delay=audio_end_delay)
 
 
     # Load tts + music for use in each of the videos
     audio = AudioFileClip("narration.mp3")
-    music = AudioFileClip("../videos/oneheart.mp3")
+    music = AudioFileClip("../audio/oneheart.mp3")
     audio = audio.set_start(audio.start + audio_start_delay)
     music = music.set_duration(audio.duration + audio_end_delay)
     full_audio = CompositeAudioClip([audio, music])
@@ -252,10 +248,12 @@ def generate_video():
     print("Editing Video")
     finalized_videos = []
     for x in range(len(video_urls)):
-        curr_video = VideoFileClip(f'./videos/video-downloaded{x + 1}.mp4')
+        curr_video = VideoFileClip(f'../videos/video-downloaded{x + 1}.mp4')
         print(x)
         curr_video = curr_video.set_start(durations[x][0])
         curr_video = curr_video.set_end(durations[x][1])
+        if x == (len(video_urls) - 1):
+            curr_video = curr_video.set_end(music.end)
         cropx = (curr_video.w - 1080) / 2
         if (cropx < 0):
             cropx = 0
