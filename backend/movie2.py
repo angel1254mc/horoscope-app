@@ -232,14 +232,14 @@ def generate_video():
 
     horoscope = get_daily_horoscope(zodiac_sign)
     print(horoscope)
-    audio_filename = "narration.mp3" # get_narrator_audio(horoscope)
+    audio_filename = get_narrator_audio(horoscope)
     # Array of textclip
     [text_clips, durations] = get_transcribed_text_v2(audio_filename=audio_filename, original_script=horoscope, start_delay=audio_start_delay, end_delay=audio_end_delay)
 
 
     # Load tts + music for use in each of the videos
     audio = AudioFileClip("narration.mp3")
-    music = AudioFileClip("oneheart.mp3")
+    music = AudioFileClip("../videos/oneheart.mp3")
     audio = audio.set_start(audio.start + audio_start_delay)
     music = music.set_duration(audio.duration + audio_end_delay)
     full_audio = CompositeAudioClip([audio, music])
