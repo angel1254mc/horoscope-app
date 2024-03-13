@@ -69,12 +69,12 @@ def get_narrator_audio(horoscope):
     }
     response = requests.request("POST", url, json=payload, headers=headers)
 
-    with open('narration.mp3', 'wb') as f:
+    with open('../audio/narration.mp3', 'wb') as f:
         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
             if chunk:
                 f.write(chunk)
     
-    return "narration.mp3"
+    return "../audio/narration.mp3"
 
 # Gets the total width in pixels of an array of strings 
 def get_text_width(word_arr, fontsize):
@@ -234,7 +234,7 @@ def generate_video():
 
 
     # Load tts + music for use in each of the videos
-    audio = AudioFileClip("narration.mp3")
+    audio = AudioFileClip(audio_filename)
     music = AudioFileClip("../audio/oneheart.mp3")
     audio = audio.set_start(audio.start + audio_start_delay)
     music = music.set_duration(audio.duration + audio_end_delay)
